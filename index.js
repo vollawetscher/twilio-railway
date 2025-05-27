@@ -76,3 +76,7 @@ app.post('/stream-status', (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 App running on port ${PORT}`);
 });
+
+setInterval(() => {
+  console.log('🫀 App is still alive...');
+}, 10000);
