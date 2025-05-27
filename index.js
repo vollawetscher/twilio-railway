@@ -11,6 +11,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Health check endpoint for Railway
+app.get('/', (req, res) => {
+  res.send('✅ Twilio Relay is running.');
+});
+
 // SSL keys (Railway uses internal certs in production, use self-signed locally if needed)
 let server;
 if (fs.existsSync('cert.pem') && fs.existsSync('key.pem')) {
