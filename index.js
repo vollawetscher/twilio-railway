@@ -19,7 +19,13 @@ app.get('/', (req, res) => {
 // Create standard HTTP server (Railway handles TLS externally)
 const server = require('http').createServer(app);
 
-const wss = new WebSocket.Server({ noServer: true });
+const wss = new WebSocket.Server({
+  noServer: true,
+  handleProtocols: (protocols) => {
+    return protocols.includes('audio') ? 'audio' : false;
+  }
+});
+
 
 server.on('upgrade', (req, socket, head) => {
   const protocols = req.headers['sec-websocket-protocol'];
