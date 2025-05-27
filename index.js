@@ -17,15 +17,7 @@ app.get('/', (req, res) => {
 });
 
 // SSL keys (Railway uses internal certs in production, use self-signed locally if needed)
-let server;
-if (fs.existsSync('cert.pem') && fs.existsSync('key.pem')) {
-  server = https.createServer({
-    cert: fs.readFileSync('cert.pem'),
-    key: fs.readFileSync('key.pem')
-  }, app);
-} else {
-  server = require('http').createServer(app);
-}
+const server = require('https').createServer(app);
 
 const wss = new WebSocket.Server({ noServer: true });
 
