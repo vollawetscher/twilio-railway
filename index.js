@@ -1,8 +1,6 @@
 // Entry point for Railway deployment
-// Merges Express server and Relay (HTTPS WebSocket) in one app
+// Merges Express server and Relay (WebSocket) in one app
 
-const fs = require('fs');
-const https = require('https');
 const express = require('express');
 const WebSocket = require('ws');
 const { twiml: { VoiceResponse } } = require('twilio');
@@ -11,12 +9,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+console.log('🧪 PORT set to:', PORT);
+
 // Health check endpoint for Railway
 app.get('/', (req, res) => {
   res.send('✅ Twilio Relay is running.');
 });
 
-// SSL keys (Railway uses internal certs in production, use self-signed locally if needed)
+// Create standard HTTP server (Railway handles TLS externally)
 const server = require('http').createServer(app);
 
 const wss = new WebSocket.Server({ noServer: true });
@@ -26,6 +26,15 @@ server.on('upgrade', (req, socket, head) => {
   const protocolList = protocols?.split(',').map(p => p.trim()) || [];
 
   if (protocolList.includes('audio')) {
+    // Accept connection and confirm audio protocol
+    socket.write(
+      'HTTP/1.1 101 Switching Protocols\r\n' +
+      'Upgrade: websocket\r\n' +
+      'Connection: Upgrade\r\n' +
+      'Sec-WebSocket-Protocol: audio\r\n' +
+      '\r\n'
+    );
+
     wss.handleUpgrade(req, socket, head, (ws) => {
       ws.protocol = 'audio';
       wss.emit('connection', ws, req);
@@ -34,6 +43,7 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy();
   }
 });
+
 
 wss.on('connection', (twilioSocket) => {
   console.log('🔗 Twilio stream connected');
@@ -76,7 +86,3 @@ app.post('/stream-status', (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 App running on port ${PORT}`);
 });
-
-setInterval(() => {
-  console.log('🫀 App is still alive...');
-}, 10000);
