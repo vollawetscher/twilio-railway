@@ -9,7 +9,7 @@ const { twiml: { VoiceResponse } } = require('twilio');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Health check endpoint for Railway
 app.get('/', (req, res) => {
@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
 });
 
 // SSL keys (Railway uses internal certs in production, use self-signed locally if needed)
-const server = require('https').createServer(app);
+const server = require('http').createServer(app);
 
 const wss = new WebSocket.Server({ noServer: true });
 
