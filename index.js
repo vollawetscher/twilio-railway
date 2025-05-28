@@ -4,6 +4,7 @@
 const express = require('express');
 const WebSocket = require('ws');
 const { twiml: { VoiceResponse } } = require('twilio');
+const connectToSpeechmatics = require('./speechmatics');
 require('dotenv').config();
 
 const app = express();
@@ -50,16 +51,32 @@ server.on('upgrade', (req, socket, head) => {
   }
 });
 
-
 wss.on('connection', (twilioSocket) => {
   console.log('🔗 Twilio stream connected');
 
-  twilioSocket.on('message', (data) => {
-    console.log('📥 WS message:', data.toString());
+  const smSocket = connectToSpeechmatics(
+    (data) => {
+      const transcript = data.results.map(r => r.alternatives[0].content).join(' ');
+      console.log('📝 Transcript:', transcript);
+    },
+    (err) => console.error('Speechmatics error', err)
+  );
+
+  twilioSocket.on('message', (msg) => {
+    try {
+      const frame = JSON.parse(msg);
+      if (frame.event === 'media') {
+        const audio = Buffer.from(frame.media.payload, 'base64');
+        smSocket.send(audio);
+      }
+    } catch (e) {
+      console.warn('Invalid WS message', e);
+    }
   });
 
   twilioSocket.on('close', () => {
     console.log('❌ Twilio WebSocket closed');
+    smSocket.close();
   });
 });
 
@@ -92,3 +109,8 @@ app.post('/stream-status', (req, res) => {
 server.listen(PORT, () => {
   console.log(`🚀 App running on port ${PORT}`);
 });
+
+console.log('ENV:');
+console.log('  WS_STREAM_URL:', process.env.WS_STREAM_URL);
+console.log('  STATUS_CALLBACK_URL:', process.env.STATUS_CALLBACK_URL);
+console.log('  ELEVENLABS_WEBHOOK:', process.env.ELEVENLABS_WEBHOOK);

@@ -1,20 +1,4 @@
-# ===== fly.toml (wird beim ersten deploy automatisch ergänzt) =====
-# Fly wird dir automatisch diesen Teil hinzufügen – Beispiel:
-#
-# [env]
-# PORT = "8080"
-#
-# [[services]]
-# internal_port = 8080
-# protocol = "tcp"
-# 
-# [[services.ports]]
-# handlers = ["http"]
-# port = 80
-#
-# [[services.ports]]
-# handlers = ["tls", "http"]
-# port = 443
+app = "twilio-railway"
 
 [env]
 PORT = "8080"
